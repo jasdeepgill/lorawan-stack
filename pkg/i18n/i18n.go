@@ -24,20 +24,69 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/gotnospirit/messageformat"
 )
 
 const defaultLanguage = "en" // The language of the messages written in Go files.
 
 // MessageDescriptor describes a translatable message.
 type MessageDescriptor struct {
-	Translations map[string]string `json:"translations,omitempty"`
-	Description  struct {
+	ID                 string `json:"id"`
+	DefaultMessage     string `json:"defaultMessage,omitempty"`
+	defaultFormat      *messageformat.MessageFormat
+	Translations       map[string]string `json:"translations,omitempty"`
+	translationFormats map[string]*messageformat.MessageFormat
+	Description        struct {
 		Package string `json:"package,omitempty"`
 		File    string `json:"file,omitempty"`
 	} `json:"description,omitempty"`
 	id      string
 	touched bool
 	updated bool
+}
+
+// Load the messages
+func (m *MessageDescriptor) Load() error {
+	defaultParser, err := messageformat.NewWithCulture(defaultLanguage)
+	if err != nil {
+		return err
+	}
+	m.defaultFormat, err = defaultParser.Parse(m.DefaultMessage)
+	if err != nil {
+		return err
+	}
+	m.translationFormats = make(map[string]*messageformat.MessageFormat, len(m.Translations))
+	for language, translation := range m.Translations {
+		langParser, err := messageformat.NewWithCulture(language)
+		if err != nil {
+			return err
+		}
+		m.translationFormats[language], err = langParser.Parse(translation)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Format a message descriptor in the given language.
+func (m *MessageDescriptor) Format(language string, data map[string]interface{}) (msg string) {
+	var err error
+	if fmt := m.translationFormats[language]; fmt != nil {
+		msg, err = fmt.FormatMap(data)
+	} else {
+		msg, err = m.defaultFormat.FormatMap(data)
+	}
+	if err != nil {
+		msg = m.ID // This shouldn't happen.
+	}
+	return
+}
+
+// Format a message from the global registry in the given language.
+func Format(id, language string, data map[string]interface{}) (msg string) {
+	return Global[id].Format(language, data)
 }
 
 // Touched returns whether the descriptor was touched (i.e. it is still used).
@@ -146,8 +195,8 @@ func (m MessageDescriptorMap) WriteFile(filename string) error {
 
 // Define a message.
 func (m MessageDescriptorMap) Define(id, message string) *MessageDescriptor {
-	if m[id] != nil {
-		panic(fmt.Errorf("Message %s already defined", id))
+	if existing := m[id]; existing != nil {
+		panic(fmt.Errorf("Message %s already defined in package %s (%s)", id, existing.Description.Package, existing.Description.File))
 	}
 	m[id] = &MessageDescriptor{
 		Translations: map[string]string{
@@ -155,6 +204,9 @@ func (m MessageDescriptorMap) Define(id, message string) *MessageDescriptor {
 		},
 		id:      id,
 		touched: true,
+	}
+	if err := m[id].Load(); err != nil {
+		panic(err)
 	}
 	m[id].SetSource(1)
 	return m[id]
