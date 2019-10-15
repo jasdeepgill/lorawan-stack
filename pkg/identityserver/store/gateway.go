@@ -16,6 +16,7 @@ package store
 
 import (
 	"sort"
+	"strings"
 
 	pbtypes "github.com/gogo/protobuf/types"
 	"go.thethings.network/lorawan-stack/pkg/ttnpb"
@@ -47,6 +48,7 @@ type Gateway struct {
 	AutoUpdate    bool   `gorm:"not null"`
 	UpdateChannel string `gorm:"type:VARCHAR"`
 
+	// Frequency Plan IDs separated by spaces.
 	FrequencyPlanID string `gorm:"type:VARCHAR"`
 
 	StatusPublic   bool `gorm:"not null"`
@@ -84,7 +86,13 @@ var gatewayPBSetters = map[string]func(*ttnpb.Gateway, *Gateway){
 	gatewayServerAddressField: func(pb *ttnpb.Gateway, gtw *Gateway) { pb.GatewayServerAddress = gtw.GatewayServerAddress },
 	autoUpdateField:           func(pb *ttnpb.Gateway, gtw *Gateway) { pb.AutoUpdate = gtw.AutoUpdate },
 	updateChannelField:        func(pb *ttnpb.Gateway, gtw *Gateway) { pb.UpdateChannel = gtw.UpdateChannel },
-	frequencyPlanIDField:      func(pb *ttnpb.Gateway, gtw *Gateway) { pb.FrequencyPlanID = gtw.FrequencyPlanID },
+	frequencyPlanIDsField: func(pb *ttnpb.Gateway, gtw *Gateway) {
+		if gtw.FrequencyPlanID == "" {
+			pb.FrequencyPlanIDs = nil
+		} else {
+			pb.FrequencyPlanIDs = strings.Split(gtw.FrequencyPlanID, " ")
+		}
+	},
 	statusPublicField:         func(pb *ttnpb.Gateway, gtw *Gateway) { pb.StatusPublic = gtw.StatusPublic },
 	locationPublicField:       func(pb *ttnpb.Gateway, gtw *Gateway) { pb.LocationPublic = gtw.LocationPublic },
 	scheduleDownlinkLateField: func(pb *ttnpb.Gateway, gtw *Gateway) { pb.ScheduleDownlinkLate = gtw.ScheduleDownlinkLate },
@@ -122,7 +130,7 @@ var gatewayModelSetters = map[string]func(*Gateway, *ttnpb.Gateway){
 	gatewayServerAddressField:   func(gtw *Gateway, pb *ttnpb.Gateway) { gtw.GatewayServerAddress = pb.GatewayServerAddress },
 	autoUpdateField:             func(gtw *Gateway, pb *ttnpb.Gateway) { gtw.AutoUpdate = pb.AutoUpdate },
 	updateChannelField:          func(gtw *Gateway, pb *ttnpb.Gateway) { gtw.UpdateChannel = pb.UpdateChannel },
-	frequencyPlanIDField:        func(gtw *Gateway, pb *ttnpb.Gateway) { gtw.FrequencyPlanID = pb.FrequencyPlanID },
+	frequencyPlanIDsField:       func(gtw *Gateway, pb *ttnpb.Gateway) { gtw.FrequencyPlanID = strings.Join(pb.FrequencyPlanIDs, " ") },
 	statusPublicField:           func(gtw *Gateway, pb *ttnpb.Gateway) { gtw.StatusPublic = pb.StatusPublic },
 	locationPublicField:         func(gtw *Gateway, pb *ttnpb.Gateway) { gtw.LocationPublic = pb.LocationPublic },
 	scheduleDownlinkLateField:   func(gtw *Gateway, pb *ttnpb.Gateway) { gtw.ScheduleDownlinkLate = pb.ScheduleDownlinkLate },
@@ -170,7 +178,7 @@ var gatewayColumnNames = map[string][]string{
 	firmwareVersionField:        {"firmware_version"},
 	autoUpdateField:             {autoUpdateField},
 	updateChannelField:          {updateChannelField},
-	frequencyPlanIDField:        {frequencyPlanIDField},
+	frequencyPlanIDsField:       {"frequency_plan_id"},
 	statusPublicField:           {statusPublicField},
 	locationPublicField:         {locationPublicField},
 	scheduleDownlinkLateField:   {scheduleDownlinkLateField},
