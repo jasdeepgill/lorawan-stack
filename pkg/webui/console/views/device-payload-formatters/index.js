@@ -16,12 +16,14 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { Container, Col, Row } from 'react-grid-system'
 import { Switch, Route, Redirect } from 'react-router'
+import { defineMessages } from 'react-intl'
 
 import sharedMessages from '../../../lib/shared-messages'
 import { withBreadcrumb } from '../../../components/breadcrumbs/context'
 import Breadcrumb from '../../../components/breadcrumbs/breadcrumb'
 import Tab from '../../../components/tabs'
 import NotFoundRoute from '../../../lib/components/not-found-route'
+import Notification from '../../../components/notification'
 
 import DeviceUplinkPayloadFormatters from '../../containers/device-payload-formatters/uplink'
 import DeviceDownlinkPayloadFormatters from '../../containers/device-payload-formatters/downlink'
@@ -35,6 +37,9 @@ import { selectSelectedDeviceId } from '../../store/selectors/device'
 
 import style from './device-payload-formatters.styl'
 
+const m = defineMessages({
+  infoText: 'Device payload formatter overrides application payload formatters, if set.',
+})
 @connect(function(state) {
   const link = selectApplicationLink(state)
   const fetching = selectApplicationLinkFetching(state)
@@ -67,6 +72,8 @@ export default class DevicePayloadFormatters extends Component {
       { title: sharedMessages.downlink, name: 'downlink', link: `${url}/downlink` },
     ]
 
+    const deviceFormatterInfo = <Notification info content={m.infoText} />
+
     return (
       <Container>
         <Row>
@@ -76,6 +83,7 @@ export default class DevicePayloadFormatters extends Component {
         </Row>
         <Row>
           <Col>
+            {deviceFormatterInfo}
             <Switch>
               <Redirect exact from={url} to={`${url}/uplink`} />
               <Route exact path={`${url}/uplink`} component={DeviceUplinkPayloadFormatters} />

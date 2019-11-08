@@ -41,6 +41,8 @@ import {
 import style from './application-payload-formatters.styl'
 
 const m = defineMessages({
+  infoText:
+    'Application payload formatters are executed on all devices in the application, unless the user defines a device-specific payload formatter.',
   warningTitle: 'Linking Needed',
   warningText: 'Please {link}, in order to configure payload formatters',
   linkApplication: 'link your application',
@@ -76,9 +78,13 @@ export default class ApplicationPayloadFormatters extends React.Component {
   static propTypes = {
     appId: PropTypes.string.isRequired,
     fetching: PropTypes.bool.isRequired,
+<<<<<<< HEAD
     getLink: PropTypes.func.isRequired,
     linked: PropTypes.bool.isRequired,
     match: PropTypes.match.isRequired,
+=======
+    linked: PropTypes.bool.isRequired,
+>>>>>>> console: Add device and application payload formatter info
   }
 
   componentDidMount() {
@@ -100,7 +106,7 @@ export default class ApplicationPayloadFormatters extends React.Component {
 
     const linkWarning = linked ? null : (
       <Notification
-        className={style.warningNotification}
+        className={style.notification}
         title={m.warningTitle}
         warning
         content={m.warningText}
@@ -114,10 +120,15 @@ export default class ApplicationPayloadFormatters extends React.Component {
       />
     )
 
+    const applicationFormatterInfo = (
+      <Notification className={style.notification} info content={m.infoText} />
+    )
+
     return (
       <Container>
         <Row>
           <Col>
+            {applicationFormatterInfo}
             {linkWarning}
             <Switch>
               <Route path={`${match.url}/uplink`} component={ApplicationUplinkPayloadFormatters} />
