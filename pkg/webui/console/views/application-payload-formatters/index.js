@@ -78,13 +78,9 @@ export default class ApplicationPayloadFormatters extends React.Component {
   static propTypes = {
     appId: PropTypes.string.isRequired,
     fetching: PropTypes.bool.isRequired,
-<<<<<<< HEAD
     getLink: PropTypes.func.isRequired,
     linked: PropTypes.bool.isRequired,
     match: PropTypes.match.isRequired,
-=======
-    linked: PropTypes.bool.isRequired,
->>>>>>> console: Add device and application payload formatter info
   }
 
   componentDidMount() {
