@@ -38,7 +38,8 @@ import { selectSelectedDeviceId } from '../../store/selectors/device'
 import style from './device-payload-formatters.styl'
 
 const m = defineMessages({
-  infoText: 'Device payload formatter overrides application payload formatters, if set.',
+  infoUplinkText: 'These payload formatters are executed on uplink messages from this device. If payload formatters are also set for the application, those are not executed for uplinks from this device.',
+  infoDownlinkText: 'These payload formatters are executed on downlink messages to this device. If payload formatters are also set for the application, those are not executed for downlinks to this device.',
 })
 @connect(function(state) {
   const link = selectApplicationLink(state)
@@ -65,14 +66,19 @@ export default class DevicePayloadFormatters extends Component {
   render() {
     const {
       match: { url },
+      location: { pathname },
     } = this.props
 
     const tabs = [
       { title: sharedMessages.uplink, name: 'uplink', link: `${url}/uplink` },
       { title: sharedMessages.downlink, name: 'downlink', link: `${url}/downlink` },
     ]
-
-    const deviceFormatterInfo = <Notification info content={m.infoText} />
+    let deviceFormatterInfo
+    if (pathname === `${url}/uplink`) {
+      deviceFormatterInfo = <Notification small info content={m.infoUplinkText} />
+    } else if (pathname === `${url}/downlink`) {
+      deviceFormatterInfo = <Notification small info content={m.infoDownlinkText} />
+    }
 
     return (
       <Container>
